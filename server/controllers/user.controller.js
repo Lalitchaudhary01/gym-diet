@@ -1,6 +1,7 @@
 const userModel = require("../models/user.model");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -8,8 +9,8 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER, // Gmail / SMTP username
-    pass: process.env.EMAIL_PASS, // Gmail App Password (not normal password!)
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Gmail App Password
   },
 });
 
@@ -32,7 +33,7 @@ const sendOtpEmail = async (email, otp) => {
 const register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    let user = await userModel.findOne({ email });
+    let user = await userModel.findOne({ email: email.toLowerCase() });
     if (user) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -41,11 +42,14 @@ const register = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Save user
     user = new userModel({
       name,
-      email,
-      password,
+      email: email.toLowerCase(),
+      password: hashedPassword,
       otp,
       otpExpires,
       isVerified: false,
@@ -62,7 +66,9 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
   }
 };
 
@@ -70,7 +76,7 @@ const register = async (req, res) => {
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(400).json({ message: "Invalid email" });
     }
@@ -84,8 +90,8 @@ const verifyOtp = async (req, res) => {
     }
 
     user.isVerified = true;
-    user.otp = undefined; // OTP clear kar dena
-    user.otpExpires = undefined;
+    user.otp = null;
+    user.otpExpires = null;
     await user.save();
 
     res.json({
@@ -95,7 +101,9 @@ const verifyOtp = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
   }
 };
 
@@ -103,7 +111,7 @@ const verifyOtp = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -117,16 +125,35 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
+    // Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     res.json({
       success: true,
       message: "Login successful",
+      token,
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
   }
 };
 
+const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  return res.status(200).json({ message: "Logout successful" });
+};
+
 // ✅ CommonJS export
-module.exports = { register, verifyOtp, login };
+module.exports = { register, verifyOtp, login, logout };

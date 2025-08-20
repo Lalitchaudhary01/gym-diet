@@ -1,6 +1,7 @@
-const moongoose = require("mongoose");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-const userSchema = new moongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -19,19 +20,25 @@ const userSchema = new moongoose.Schema(
     },
     otp: {
       type: String,
-      required: true,
+      default: null, // optional
     },
     otpExpires: {
       type: Date,
-      required: true,
+      default: null, // optional
     },
     isVerified: {
       type: Boolean,
-      default: true,
+      default: false, // ✅ by default unverified
     },
   },
   {
     timestamps: true,
   }
 );
-exports = moongoose.model("User", userSchema);
+
+// password compare method
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model("User", userSchema);
