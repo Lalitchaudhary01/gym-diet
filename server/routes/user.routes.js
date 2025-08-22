@@ -3,7 +3,7 @@ const {
   register,
   verifyOtp,
   login,
-  logout,
+  logoutUser,
 } = require("../controllers/user.controller");
 
 const router = express.Router();
@@ -11,6 +11,6 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/verify-otp", verifyOtp);
 router.post("/login", login);
-router.post("/logout", logout);
+router.post("/logout", logoutUser);
 
 module.exports = router;

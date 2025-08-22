@@ -17,26 +17,41 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minlength: 6, // ✅ password validation
     },
     otp: {
       type: String,
-      default: null, // optional
+      default: null,
     },
     otpExpires: {
       type: Date,
-      default: null, // optional
+      default: null,
     },
     isVerified: {
       type: Boolean,
-      default: false, // ✅ by default unverified
+      default: false,
     },
+    // Health Profile
+    age: { type: Number },
+    weight: { type: Number }, // in kg
+    height: { type: Number }, // in cm
+    medicalConditions: [{ type: String }],
+    goal: { type: String }, // weight loss, muscle gain, etc.
   },
   {
     timestamps: true,
   }
 );
 
-// password compare method
+// 🔒 Pre-save middleware to hash password
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // agar password change nahi hua toh skip karo
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// ✅ Password compare method
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

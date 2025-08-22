@@ -108,6 +108,7 @@ const verifyOtp = async (req, res) => {
 };
 
 // ---------------- Login ----------------
+// ---------------- Login ----------------
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -120,12 +121,11 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Email not verified" });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.password); // ✅ direct bcrypt
     if (!isMatch) {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
-    // Generate JWT Token
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -146,14 +146,26 @@ const login = async (req, res) => {
   }
 };
 
-const logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-  return res.status(200).json({ message: "Logout successful" });
+const logoutUser = async (req, res) => {
+  try {
+    // Agar tu cookie me token store kar raha hai:
+    res.clearCookie("token"); // cookie ko clear kar diya
+
+    // Agar tu frontend localStorage me token save karta hai toh
+    // server side se kuch karne ki need nahi, frontend pe token remove ho jayega.
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully ✅",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed ❌",
+      error: error.message,
+    });
+  }
 };
 
 // ✅ CommonJS export
-module.exports = { register, verifyOtp, login, logout };
+module.exports = { register, verifyOtp, login, logoutUser };

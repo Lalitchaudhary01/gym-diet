@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,24 +18,41 @@ export default function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8 text-gray-700 font-medium">
-            <a href="#dashboard" className="hover:text-green-600">Dashboard</a>
-            <a href="#diet" className="hover:text-green-600">Diet Planner</a>
-            <a href="#recipes" className="hover:text-green-600">Recipes</a>
-            <a href="#shopping" className="hover:text-green-600">Shopping List</a>
-            <a href="#tracker" className="hover:text-green-600">Analytics</a>
+            <a href="#dashboard" className="hover:text-green-600">
+              Dashboard
+            </a>
+            <a href="#diet" className="hover:text-green-600">
+              Diet Planner
+            </a>
+            <a href="#recipes" className="hover:text-green-600">
+              Recipes
+            </a>
+            <a href="#shopping" className="hover:text-green-600">
+              Shopping List
+            </a>
+            <a href="#tracker" className="hover:text-green-600">
+              Analytics
+            </a>
           </div>
 
           {/* Profile + Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">
+            <Link
+              to="/auth"
+              className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+            >
               Login
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button onClick={toggleMenu}>
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
@@ -43,11 +61,21 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden px-4 pb-4 space-y-2 bg-white shadow-lg">
-          <a href="#dashboard" className="block hover:text-green-600">Dashboard</a>
-          <a href="#diet" className="block hover:text-green-600">Diet Planner</a>
-          <a href="#recipes" className="block hover:text-green-600">Recipes</a>
-          <a href="#shopping" className="block hover:text-green-600">Shopping List</a>
-          <a href="#tracker" className="block hover:text-green-600">Analytics</a>
+          <a href="#dashboard" className="block hover:text-green-600">
+            Dashboard
+          </a>
+          <a href="#diet" className="block hover:text-green-600">
+            Diet Planner
+          </a>
+          <a href="#recipes" className="block hover:text-green-600">
+            Recipes
+          </a>
+          <a href="#shopping" className="block hover:text-green-600">
+            Shopping List
+          </a>
+          <a href="#tracker" className="block hover:text-green-600">
+            Analytics
+          </a>
           <button className="w-full px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">
             Login
           </button>
